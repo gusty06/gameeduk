@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lilypad Math Quest - Petualangan Katak Pintar</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Fredoka for cheerful child-friendly typography -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Fredoka', cursive, sans-serif;
+            user-select: none;
+            touch-action: manipulation;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-8px) rotate(2deg); }
+        }
+        @keyframes pulse-gentle {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        @keyframes ripple {
+            0% { transform: scale(0.8); opacity: 1; }
+            100% { transform: scale(2.2); opacity: 0; }
+        }
+        @keyframes splash {
+            0% { transform: scale(0); opacity: 1; }
+            50% { transform: scale(1.2); opacity: 0.8; }
+            100% { transform: scale(1.8); opacity: 0; }
+        }
+        @keyframes hop {
+            0% { transform: translateY(0) scale(1, 1); }
+            30% { transform: translateY(-70px) scale(0.9, 1.1); }
+            70% { transform: translateY(-70px) scale(1.1, 0.9); }
+            100% { transform: translateY(0) scale(1, 1); }
+        }
+        @keyframes fall-water {
+            0% { transform: translateY(0) rotate(0deg) scale(1); opacity: 1; }
+            60% { transform: translateY(120px) rotate(180deg) scale(0.7); opacity: 0.8; }
+            100% { transform: translateY(180px) rotate(360deg) scale(0.2); opacity: 0; }
+        }
+        .animate-float {
+            animation: float 3s ease-in-out infinite;
+        }
+        .animate-pulse-gentle {
+            animation: pulse-gentle 2s ease-in-out infinite;
+        }
+        .lily-pad {
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .lily-pad:hover {
+            transform: scale(1.08) translateY(-4px);
+        }
+        .lily-pad:active {
+            transform: scale(0.95);
+        }
+        /* Custom scrollbar for squad view */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(0,0,0,0.05);
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(34, 197, 94, 0.5);
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-b from-teal-400 via-cyan-500 to-blue-600 min-h-screen text-slate-800 overflow-x-hidden relative flex flex-col justify-between">
+
+    <!-- Background Decorative Elements (Bubbles & Water ripples) -->
+    <div class="absolute inset-0 overflow-hidden pointer-events-none z-0">
+        <div class="absolute top-10 left-10 w-24 h-24 bg-white/10 rounded-full blur-xl animate-pulse"></div>
+        <div class="absolute bottom-20 right-16 w-36 h-36 bg-cyan-300/20 rounded-full blur-2xl animate-pulse" style="animation-delay: 1s;"></div>
+        <div class="absolute top-1/2 left-1/4 w-16 h-16 bg-white/15 rounded-full blur-lg animate-float"></div>
+    </div>
+
+    <!-- Main Container -->
+    <main id="app-container" class="relative z-10 flex-1 flex flex-col items-center justify-center p-4 max-w-7xl mx-auto w-full">
+
+        <!-- 1. MAIN MENU SCREEN -->
+        <div id="screen-menu" class="w-full flex flex-col items-center justify-center text-center space-y-6 py-8">
+            <div class="animate-float">
+                <div class="inline-block bg-white/90 p-4 rounded-3xl shadow-2xl border-4 border-emerald-300 mb-2">
+                    <img src="https://imgur.com/hacZ7WF.png" alt="Froggy" class="w-20 h-20 md:w-28 md:h-28 object-contain drop-shadow-md" onerror="this.onerror=null; this.src='https://placehold.co/100x100/22c55e/ffffff?text=🐸';">
+                </div>
+            </div>
+            
+            <div class="space-y-2">
+                <h1 class="text-4xl md:text-6xl font-extrabold text-white drop-shadow-md tracking-wider">
+                    LILYPAD MATH QUEST
+                </h1>
+                <p class="text-xl md:text-2xl font-semibold text-emerald-100 drop-shadow">
+                    Petualangan Katak Pintar: Ayo Belajar Perkalian & Pembagian!
+                </p>
+                <!-- Creator / Author Name -->
+                <div class="inline-block bg-white/30 backdrop-blur-sm px-4 py-1.5 rounded-full border border-white/40 mt-1">
+                    <p class="text-xs md:text-sm font-bold text-white tracking-wide">
+                        ✨ Dibuat Oleh: <span class="text-amber-200">Gusti Noviyani, S.Pd., Gr.</span>
+                    </p>
+                </div>
+            </div>
+
+            <!-- Topic Selector in Menu -->
+            <div class="bg-white/80 backdrop-blur-md p-4 rounded-2xl shadow-xl max-w-md w-full border-2 border-white">
+                <label class="block text-slate-700 font-bold mb-2 text-lg">Pilih Materi Belajar:</label>
+                <div class="grid grid-cols-3 gap-2">
+                    <button onclick="setTopic('perkalian')" id="btn-topic-perkalian" class="topic-btn py-2.5 px-3 rounded-xl font-bold transition shadow bg-emerald-500 text-white shadow-emerald-300">
+                        Perkalian ✖
+                    </button>
+                    <button onclick="setTopic('pembagian')" id="btn-topic-pembagian" class="topic-btn py-2.5 px-3 rounded-xl font-bold transition shadow bg-white text-slate-700 hover:bg-slate-100">
+                        Pembagian ➗
+                    </button>
+                    <button onclick="setTopic('campuran')" id="btn-topic-campuran" class="topic-btn py-2.5 px-3 rounded-xl font-bold transition shadow bg-white text-slate-700 hover:bg-slate-100">
+                        Campuran ✨
+                    </button>
+                </div>
+            </div>
+
+            <!-- Menu Action Buttons -->
+            <div class="flex flex-col sm:flex-row gap-4 w-full max-w-md justify-center">
+                <button onclick="showScreen('screen-mode')" class="flex-1 bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white font-bold text-xl py-4 px-8 rounded-2xl shadow-xl transform transition hover:-translate-y-1 active:translate-y-0 border-b-4 border-green-800 flex items-center justify-center gap-3">
+                    <span class="text-2xl">🎮</span> MULAI BERMAIN
+                </button>
+            </div>
+
+            <div class="flex gap-4">
+                <button onclick="openModal('modal-guide')" class="bg-amber-400 hover:bg-amber-500 text-amber-950 font-bold py-2.5 px-6 rounded-xl shadow-md transition flex items-center gap-2">
+                    <span>📖</span> Panduan
+                </button>
+                <button onclick="openModal('modal-settings')" class="bg-sky-400 hover:bg-sky-500 text-sky-950 font-bold py-2.5 px-6 rounded-xl shadow-md transition flex items-center gap-2">
+                    <span>⚙️</span> Pengaturan
+                </button>
+            </div>
+        </div>
+
+        <!-- 2. MODE SELECTION SCREEN -->
+        <div id="screen-mode" class="w-full hidden flex flex-col items-center justify-center text-center space-y-8 py-6">
+            <div class="space-y-2">
+                <h2 class="text-3xl md:text-5xl font-extrabold text-white drop-shadow">PILIH MODE PERMAINAN</h2>
+                <p class="text-lg text-emerald-100">Main sendiri atau bertanding seru bersama teman-teman!</p>
+            </div>
+
+            <!-- Player Name Editor Container (Injected dynamically when mode is selected or visible) -->
+            <div id="player-names-input-container" class="w-full max-w-xl bg-white/90 backdrop-blur-md p-6 rounded-3xl shadow-xl border-4 border-emerald-300 text-left space-y-4">
+                <h3 class="text-xl font-bold text-slate-800 flex items-center gap-2">
+                    <span>✏️</span> Nama Pemain:
+                </h3>
+                <div id="player-inputs-grid" class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <!-- Dynamic inputs populated via JavaScript based on selected mode -->
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-5xl">
+                <!-- Solo Mode -->
+                <div onclick="selectGameMode('solo')" class="bg-white/90 backdrop-blur hover:bg-white p-6 rounded-3xl shadow-2xl border-4 border-emerald-400 cursor-pointer transform transition hover:-translate-y-2 flex flex-col items-center group">
+                    <div class="w-20 h-20 bg-emerald-100 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition shadow-inner p-2">
+                        <img src="https://imgur.com/hacZ7WF.png" alt="Froggy" class="w-16 h-16 object-contain" onerror="this.onerror=null; this.src='https://placehold.co/80x80/22c55e/ffffff?text=🐸';">
+                    </div>
+                    <h3 class="text-2xl font-bold text-emerald-800 mb-2">SOLO MODE</h3>
+                    <p class="text-slate-600 text-sm mb-4">Bantu katak melompat sendirian, kumpulkan skor tertinggi dan uji kemampuanmu!</p>
+                    <span class="mt-auto bg-emerald-500 text-white font-bold py-2 px-6 rounded-xl shadow group-hover:bg-emerald-600 transition">Mulai Solo (1P)</span>
+                </div>
+
+                <!-- Duel Mode -->
+                <div onclick="selectGameMode('duel')" class="bg-white/90 backdrop-blur hover:bg-white p-6 rounded-3xl shadow-2xl border-4 border-cyan-400 cursor-pointer transform transition hover:-translate-y-2 flex flex-col items-center group">
+                    <div class="w-20 h-20 bg-cyan-100 rounded-2xl flex items-center justify-center text-4xl mb-4 group-hover:scale-110 transition shadow-inner">
+                        ⚔️
+                    </div>
+                    <h3 class="text-2xl font-bold text-cyan-800 mb-2">DUEL MODE</h3>
+                    <p class="text-slate-600 text-sm mb-4">2 Pemain beradu cepat dan tepat di layar terbelah (Split Screen) untuk jadi juara!</p>
+                    <span class="mt-auto bg-cyan-500 text-white font-bold py-2 px-6 rounded-xl shadow group-hover:bg-cyan-600 transition">Mulai Duel (2P)</span>
+                </div>
+
+                <!-- Squad Mode -->
+                <div onclick="selectGameMode('squad')" class="bg-white/90 backdrop-blur hover:bg-white p-6 rounded-3xl shadow-2xl border-4 border-indigo-400 cursor-pointer transform transition hover:-translate-y-2 flex flex-col items-center group">
+                    <div class="w-20 h-20 bg-indigo-100 rounded-2xl flex items-center justify-center text-4xl mb-4 group-hover:scale-110 transition shadow-inner">
+                        🏆
+                    </div>
+                    <h3 class="text-2xl font-bold text-indigo-800 mb-2">SQUAD MODE</h3>
+                    <p class="text-slate-600 text-sm mb-4">4 Pemain dalam grid 2x2. Pertandingan seru bareng teman sekelas!</p>
+                    <span class="mt-auto bg-indigo-500 text-white font-bold py-2 px-6 rounded-xl shadow group-hover:bg-indigo-600 transition">Mulai Squad (4P)</span>
+                </div>
+            </div>
+
+            <button onclick="showScreen('screen-menu')" class="bg-white/20 hover:bg-white/30 text-white font-bold py-3 px-8 rounded-2xl backdrop-blur transition flex items-center gap-2 border border-white/40">
+                <span>⬅️</span> Kembali ke Menu
+            </button>
+        </div>
+
+        <!-- 3. MAIN GAME SCREEN -->
+        <div id="screen-game" class="w-full hidden flex-col items-center justify-center min-h-[85vh]">
+            <!-- Top bar with Back to Menu & Game Info -->
+            <div class="w-full flex justify-between items-center mb-4 px-2">
+                <div class="flex items-center gap-2">
+                    <button onclick="exitToMainMenu()" class="bg-white/80 hover:bg-white text-slate-800 font-bold py-2 px-4 rounded-xl shadow transition flex items-center gap-2 text-sm hover:scale-105 active:scale-95">
+                        <span>🏠</span> Menu Utama
+                    </button>
+                </div>
+                <div class="bg-white/80 backdrop-blur px-4 py-2 rounded-2xl shadow font-bold text-teal-900 flex items-center gap-3">
+                    <span id="game-topic-badge" class="bg-emerald-500 text-white text-xs px-2.5 py-1 rounded-lg uppercase">Perkalian</span>
+                    <span id="game-mode-badge" class="text-sm">Solo Mode</span>
+                </div>
+            </div>
+
+            <!-- Dynamic Game Board Container -->
+            <div id="game-board-container" class="w-full flex-1 flex gap-4 justify-center items-center overflow-x-auto pb-2">
+                <!-- Dynamically injected player arenas -->
+            </div>
+        </div>
+
+        <!-- 4. END GAME / RESULTS SCREEN -->
+        <div id="screen-result" class="w-full hidden flex-col items-center justify-center text-center space-y-6 py-6 max-w-4xl mx-auto">
+            <div class="bg-white/95 backdrop-blur-md p-8 rounded-3xl shadow-2xl border-4 border-emerald-400 w-full space-y-6">
+                <div class="text-6xl animate-bounce">👑</div>
+                <h2 class="text-3xl md:text-5xl font-extrabold text-emerald-800">PERMAINAN SELESAI!</h2>
+                
+                <div id="result-content" class="w-full space-y-4">
+                    <!-- Populated dynamically based on Solo / Duel / Squad -->
+                </div>
+
+                <div class="flex flex-wrap justify-center gap-4 pt-4">
+                    <button onclick="restartGame()" class="bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-lg py-3 px-8 rounded-2xl shadow-lg transition transform hover:-translate-y-1">
+                        🔄 Main Lagi
+                    </button>
+                    <button onclick="showScreen('screen-mode')" class="bg-cyan-500 hover:bg-cyan-600 text-white font-bold text-lg py-3 px-8 rounded-2xl shadow-lg transition transform hover:-translate-y-1">
+                        🎮 Pilih Mode Lain
+                    </button>
+                    <button onclick="exitToMainMenu()" class="bg-slate-500 hover:bg-slate-600 text-white font-bold text-lg py-3 px-8 rounded-2xl shadow-lg transition transform hover:-translate-y-1">
+                        🏠 Menu Utama
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="relative z-10 text-center py-4 text-white/80 text-xs md:text-sm font-semibold">
+        Lilypad Math Quest &copy; 2026 - Media Pembelajaran Matematika Kelas 2 SD
+    </footer>
+
+    <!-- MODAL: PANDUAN -->
+    <div id="modal-guide" class="fixed inset-0 z-50 hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl shadow-2xl max-w-lg w-full p-6 space-y-4 relative border-4 border-amber-300">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 class="text-2xl font-bold text-amber-800 flex items-center gap-2"><span>📖</span> Panduan Bermain</h3>
+                <button onclick="closeModal('modal-guide')" class="text-slate-400 hover:text-slate-600 text-2xl font-bold">&times;</button>
+            </div>
+            <div class="space-y-3 text-slate-700 text-sm md:text-base">
+                <div class="flex items-start gap-3">
+                    <div class="bg-amber-100 text-amber-800 font-bold rounded-full w-7 h-7 flex items-center justify-center shrink-0">1</div>
+                    <p><b>Pilih Mode:</b> Main sendiri (Solo), 2 pemain (Duel), atau 4 pemain (Squad).</p>
+                </div>
+                <div class="flex items-start gap-3">
+                    <div class="bg-amber-100 text-amber-800 font-bold rounded-full w-7 h-7 flex items-center justify-center shrink-0">2</div>
+                    <p><b>Baca Soal:</b> Perhatikan pertanyaan perkalian atau pembagian di bagian atas.</p>
+                </div>
+                <div class="flex items-start gap-3">
+                    <div class="bg-amber-100 text-amber-800 font-bold rounded-full w-7 h-7 flex items-center justify-center shrink-0">3</div>
+                    <p><b>Pilih Daun Teratai:</b> Klik daun teratai dengan jawaban yang benar agar katak melompat dengan sukses!</p>
+                </div>
+                <div class="flex items-start gap-3">
+                    <div class="bg-amber-100 text-amber-800 font-bold rounded-full w-7 h-7 flex items-center justify-center shrink-0">4</div>
+                    <p><b>Nyawa & Skor:</b> Kamu punya 3 nyawa. Jawaban benar bernilai +10 poin, jawaban salah mengurangi nyawa.</p>
+                </div>
+            </div>
+            <div class="text-center pt-2">
+                <button onclick="closeModal('modal-guide')" class="bg-amber-500 hover:bg-amber-600 text-white font-bold py-2.5 px-8 rounded-xl shadow">Mengerti!</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: PENGATURAN -->
+    <div id="modal-settings" class="fixed inset-0 z-50 hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full p-6 space-y-6 relative border-4 border-sky-300">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 class="text-2xl font-bold text-sky-800 flex items-center gap-2"><span>⚙️</span> Pengaturan Suara</h3>
+                <button onclick="closeModal('modal-settings')" class="text-slate-400 hover:text-slate-600 text-2xl font-bold">&times;</button>
+            </div>
+            <div class="space-y-4">
+                <div class="flex items-center justify-between bg-sky-50 p-4 rounded-2xl">
+                    <span class="font-bold text-slate-700">Musik Latar (BGM)</span>
+                    <button onclick="toggleBGM()" id="bgm-toggle-btn" class="bg-emerald-500 text-white px-4 py-2 rounded-xl font-bold shadow transition">NYALA</button>
+                </div>
+                <div class="flex items-center justify-between bg-sky-50 p-4 rounded-2xl">
+                    <span class="font-bold text-slate-700">Efek Suara (SFX)</span>
+                    <button onclick="toggleSFX()" id="sfx-toggle-btn" class="bg-emerald-500 text-white px-4 py-2 rounded-xl font-bold shadow transition">NYALA</button>
+                </div>
+            </div>
+            <div class="text-center pt-2">
+                <button onclick="closeModal('modal-settings')" class="bg-sky-500 hover:bg-sky-600 text-white font-bold py-2.5 px-8 rounded-xl shadow">Simpan</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- AUDIO SYNTHESIZER & GAME SCRIPT -->
+    <script>
+        // --- AUDIO ENGINE (Web Audio API) ---
+        let audioCtx = null;
+        let isBgmOn = true;
+        let isSfxOn = true;
+        let bgmInterval = null;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        function playTone(frequency, type, duration, delay = 0) {
+            if (!isSfxOn) return;
+            initAudio();
+            setTimeout(() => {
+                try {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = type;
+                    osc.frequency.setValueAtTime(frequency, audioCtx.currentTime);
+                    gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + duration);
+                } catch(e) {}
+            }, delay);
+        }
+
+        function playSFX(type) {
+            if (!isSfxOn) return;
+            initAudio();
+            switch(type) {
+                case 'jump':
+                    playTone(300, 'sine', 0.1);
+                    playTone(500, 'sine', 0.15, 80);
+                    break;
+                case 'correct':
+                    playTone(440, 'triangle', 0.15);
+                    playTone(554.37, 'triangle', 0.15, 120);
+                    playTone(659.25, 'triangle', 0.3, 240);
+                    break;
+                case 'wrong':
+                    playTone(220, 'sawtooth', 0.2);
+                    playTone(180, 'sawtooth', 0.3, 150);
+                    break;
+                case 'splash':
+                    playTone(150, 'sine', 0.1);
+                    playTone(100, 'sine', 0.25, 80);
+                    break;
+                case 'click':
+                    playTone(600, 'sine', 0.05);
+                    break;
+                case 'win':
+                    playTone(523.25, 'triangle', 0.2);
+                    playTone(659.25, 'triangle', 0.2, 200);
+                    playTone(783.99, 'triangle', 0.2, 400);
+                    playTone(1046.50, 'triangle', 0.5, 600);
+                    break;
+            }
+        }
+
+        function startBgm() {
+            if (bgmInterval) clearInterval(bgmInterval);
+            const melody = [261.63, 329.63, 392.00, 523.25, 392.00, 329.63];
+            let noteIdx = 0;
+            bgmInterval = setInterval(() => {
+                if (!isBgmOn) return;
+                initAudio();
+                try {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(melody[noteIdx], audioCtx.currentTime);
+                    gain.gain.setValueAtTime(0.04, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.3);
+                    noteIdx = (noteIdx + 1) % melody.length;
+                } catch(e) {}
+            }, 400);
+        }
+
+        function toggleBGM() {
+            isBgmOn = !isBgmOn;
+            const btn = document.getElementById('bgm-toggle-btn');
+            if (isBgmOn) {
+                btn.textContent = "NYALA";
+                btn.className = "bg-emerald-500 text-white px-4 py-2 rounded-xl font-bold shadow transition";
+                startBgm();
+            } else {
+                btn.textContent = "MATI";
+                btn.className = "bg-rose-500 text-white px-4 py-2 rounded-xl font-bold shadow transition";
+                if (bgmInterval) clearInterval(bgmInterval);
+            }
+            playSFX('click');
+        }
+
+        function toggleSFX() {
+            isSfxOn = !isSfxOn;
+            const btn = document.getElementById('sfx-toggle-btn');
+            if (isSfxOn) {
+                btn.textContent = "NYALA";
+                btn.className = "bg-emerald-500 text-white px-4 py-2 rounded-xl font-bold shadow transition";
+            } else {
+                btn.textContent = "MATI";
+                btn.className = "bg-rose-500 text-white px-4 py-2 rounded-xl font-bold shadow transition";
+            }
+            playSFX('click');
+        }
+
+        // --- GAME STATE & LOGIC ---
+        let gameState = {
+            mode: 'solo', // 'solo', 'duel', 'squad'
+            topic: 'perkalian', // 'perkalian', 'pembagian', 'campuran'
+            playerCustomNames: ["Pemain 1", "Pemain 2", "Pemain 3", "Pemain 4"],
+            players: []
+        };
+
+        const playerColors = [
+            { bg: 'bg-emerald-500', border: 'border-emerald-300', text: 'text-emerald-800', light: 'bg-emerald-50' },
+            { bg: 'bg-cyan-500', border: 'border-cyan-300', text: 'text-cyan-800', light: 'bg-cyan-50' },
+            { bg: 'bg-indigo-500', border: 'border-indigo-300', text: 'text-indigo-800', light: 'bg-indigo-50' },
+            { bg: 'bg-amber-500', border: 'border-amber-300', text: 'text-amber-800', light: 'bg-amber-50' }
+        ];
+
+        function setTopic(topic) {
+            gameState.topic = topic;
+            document.querySelectorAll('.topic-btn').forEach(btn => {
+                btn.className = "topic-btn py-2.5 px-3 rounded-xl font-bold transition shadow bg-white text-slate-700 hover:bg-slate-100";
+            });
+            const activeBtn = document.getElementById(`btn-topic-${topic}`);
+            if (activeBtn) {
+                activeBtn.className = "topic-btn py-2.5 px-3 rounded-xl font-bold transition shadow bg-emerald-500 text-white shadow-emerald-300";
+            }
+            playSFX('click');
+        }
+
+        function showScreen(screenId) {
+            ['screen-menu', 'screen-mode', 'screen-game', 'screen-result'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.classList.add('hidden');
+            });
+            const target = document.getElementById(screenId);
+            if (target) {
+                target.classList.remove('hidden');
+                target.classList.add('flex');
+            }
+            if (screenId === 'screen-mode') {
+                renderPlayerNameInputs(4); // Render all 4 inputs on mode screen
+            }
+            playSFX('click');
+        }
+
+        function renderPlayerNameInputs(maxCount) {
+            const container = document.getElementById('player-inputs-grid');
+            if (!container) return;
+            container.innerHTML = '';
+            for (let i = 0; i < maxCount; i++) {
+                const nameVal = gameState.playerCustomNames[i] || `Pemain ${i + 1}`;
+                container.innerHTML += `
+                    <div class="flex items-center gap-2 bg-slate-100 p-2.5 rounded-xl border border-slate-200">
+                        <span class="w-6 h-6 rounded-lg ${playerColors[i].bg} text-white font-bold text-xs flex items-center justify-center">${i + 1}</span>
+                        <input type="text" maxlength="12" value="${nameVal}" onchange="updatePlayerCustomName(${i}, this.value)" onkeyup="updatePlayerCustomName(${i}, this.value)" class="bg-white border border-slate-300 rounded-lg px-2.5 py-1 text-sm font-bold text-slate-700 w-full focus:outline-none focus:border-emerald-500" placeholder="Pemain ${i + 1}">
+                    </div>
+                `;
+            }
+        }
+
+        function updatePlayerCustomName(index, newName) {
+            const cleanName = newName.trim() || `Pemain ${index + 1}`;
+            gameState.playerCustomNames[index] = cleanName;
+            if (gameState.players[index]) {
+                gameState.players[index].name = cleanName;
+                const nameSpan = document.getElementById(`p-name-display-${index}`);
+                if (nameSpan) nameSpan.textContent = cleanName;
+            }
+        }
+
+        function editPlayerNamePrompt(playerIdx) {
+            const currentName = gameState.players[playerIdx].name;
+            const newName = prompt(`Masukkan nama baru untuk Pemain ${playerIdx + 1}:`, currentName);
+            if (newName !== null && newName.trim() !== "") {
+                updatePlayerCustomName(playerIdx, newName);
+                playSFX('click');
+            }
+        }
+
+        function openModal(modalId) {
+            document.getElementById(modalId).classList.remove('hidden');
+            playSFX('click');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.add('hidden');
+            playSFX('click');
+        }
+
+        function selectGameMode(mode) {
+            gameState.mode = mode;
+            initGameSession();
+        }
+
+        function initGameSession() {
+            initAudio();
+            startBgm();
+
+            let numPlayers = 1;
+            if (gameState.mode === 'duel') numPlayers = 2;
+            if (gameState.mode === 'squad') numPlayers = 4;
+
+            gameState.players = [];
+            for (let i = 0; i < numPlayers; i++) {
+                const playerName = gameState.playerCustomNames[i] || `Pemain ${i + 1}`;
+                gameState.players.push({
+                    id: i,
+                    name: playerName,
+                    score: 0,
+                    lives: 3,
+                    streak: 0,
+                    correctCount: 0,
+                    wrongCount: 0,
+                    currentQuestion: null,
+                    options: [],
+                    active: true,
+                    animState: 'idle'
+                });
+                generateNewQuestionForPlayer(i);
+            }
+
+            renderGameContainers();
+            showScreen('screen-game');
+        }
+
+        // --- QUESTION GENERATOR ---
+        function generateNewQuestionForPlayer(playerIdx) {
+            let topic = gameState.topic;
+            if (topic === 'campuran') {
+                topic = Math.random() < 0.5 ? 'perkalian' : 'pembagian';
+            }
+
+            let qText = "";
+            let correctAns = 0;
+
+            if (topic === 'perkalian') {
+                const a = Math.floor(Math.random() * 8) + 2; // 2 to 9
+                const b = Math.floor(Math.random() * 8) + 2; // 2 to 9
+                qText = `${a} × ${b}`;
+                correctAns = a * b;
+            } else {
+                // Pembagian (Grade 2 suitable, whole results)
+                const b = Math.floor(Math.random() * 7) + 2; // divisor 2-8
+                const quotient = Math.floor(Math.random() * 7) + 2; // result 2-8
+                const a = b * quotient;
+                qText = `${a} ÷ ${b}`;
+                correctAns = quotient;
+            }
+
+            // Generate 4 distinct options
+            let optionsSet = new Set([correctAns]);
+            while (optionsSet.size < 4) {
+                let offset = (Math.floor(Math.random() * 5) + 1) * (Math.random() < 0.5 ? 1 : -1);
+                let wrongOpt = correctAns + offset;
+                if (wrongOpt > 0 && wrongOpt !== correctAns) {
+                    optionsSet.add(wrongOpt);
+                }
+            }
+
+            let options = Array.from(optionsSet).sort(() => Math.random() - 0.5);
+
+            gameState.players[playerIdx].currentQuestion = {
+                text: qText,
+                answer: correctAns
+            };
+            gameState.players[playerIdx].options = options;
+        }
+
+        // --- RENDER GAME UI ---
+        function renderGameContainers() {
+            const container = document.getElementById('game-board-container');
+            container.innerHTML = '';
+
+            document.getElementById('game-topic-badge').textContent = gameState.topic.toUpperCase();
+            document.getElementById('game-mode-badge').textContent = `${gameState.mode.toUpperCase()} MODE`;
+
+            let layoutClass = "flex-1 flex-col";
+            if (gameState.mode === 'solo') {
+                // Layout for Solo Mode: Full Screen width container with centered card layout
+                layoutClass = "w-full max-w-4xl mx-auto flex-1 flex-col";
+            } else if (gameState.mode === 'duel') {
+                layoutClass = "grid grid-cols-1 md:grid-cols-2 gap-4 w-full h-full";
+            } else if (gameState.mode === 'squad') {
+                // Layout updated for Squad Mode: 4 players side-by-side (4 sejajar secara horizontal)
+                layoutClass = "grid grid-cols-4 min-w-[900px] md:min-w-full gap-0 w-full h-full rounded-3xl overflow-hidden border-4 border-emerald-400 bg-white/30 backdrop-blur-md divide-x-4 divide-emerald-400/80";
+            }
+
+            container.className = `w-full flex-1 ${layoutClass} items-stretch justify-center`;
+
+            gameState.players.forEach((p, idx) => {
+                const pColor = playerColors[idx];
+                const isSolo = gameState.mode === 'solo';
+
+                const playerHtml = `
+                    <div id="player-arena-${p.id}" class="bg-white/80 backdrop-blur-md p-3 md:p-5 flex flex-col justify-between w-full h-full ${isSolo ? 'min-h-[500px] rounded-3xl border-4 border-emerald-400 shadow-2xl' : 'min-h-[420px]'} relative overflow-hidden">
+                        <!-- Header Player info -->
+                        <div class="flex justify-between items-center bg-teal-50 px-3 py-2 rounded-xl border border-teal-100 mb-2">
+                            <div class="flex items-center gap-1.5 overflow-hidden">
+                                <span class="w-7 h-7 rounded-lg ${pColor.bg} text-white flex items-center justify-center font-bold text-xs shadow shrink-0">${p.id + 1}</span>
+                                <span id="p-name-display-${p.id}" class="font-bold text-slate-700 text-sm md:text-base truncate max-w-[100px] md:max-w-[150px]">${p.name}</span>
+                                <button onclick="editPlayerNamePrompt(${p.id})" class="text-xs bg-slate-200 hover:bg-slate-300 px-1.5 py-0.5 rounded transition shrink-0" title="Ubah Nama">✏️ Edit</button>
+                            </div>
+                            <div class="flex items-center gap-3 shrink-0">
+                                <div class="flex items-center text-rose-500 font-bold text-sm md:text-base">
+                                    ❤️ <span id="p-lives-${p.id}" class="ml-1">${p.lives}</span>
+                                </div>
+                                <div class="bg-amber-100 text-amber-800 px-2.5 py-1 rounded-xl font-bold text-sm md:text-base shadow-inner">
+                                    ⭐ <span id="p-score-${p.id}">${p.score}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Question & Pond Arena -->
+                        <div class="flex-1 flex flex-col items-center justify-center my-2 relative">
+                            <!-- Question Card -->
+                            <div class="bg-gradient-to-r from-emerald-500 to-green-600 text-white px-4 py-2.5 rounded-2xl shadow-lg mb-3 text-center border-2 border-white/40 w-full max-w-lg">
+                                <span class="text-xs uppercase tracking-wider block opacity-90">Berapa hasil dari:</span>
+                                <span id="p-qtext-${p.id}" class="text-2xl md:text-4xl font-extrabold tracking-wide">${p.currentQuestion.text} = ?</span>
+                            </div>
+
+                            <!-- Pond Visual with Frog & Stepping Lily Pads Path -->
+                            <div class="relative w-full ${isSolo ? 'h-56 md:h-64' : 'h-36 md:h-44'} bg-gradient-to-b from-teal-600 to-cyan-700 rounded-2xl shadow-inner flex flex-col items-center justify-center overflow-hidden border-2 border-cyan-800">
+                                <!-- Water ripple effect background -->
+                                <div class="absolute inset-0 opacity-20 bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:16px_16px]"></div>
+                                
+                                ${isSolo ? `
+                                <!-- Sequential Stepping Lily Pads Row in Solo Mode -->
+                                <div class="absolute inset-x-0 bottom-2 flex justify-around items-center px-4 opacity-80 pointer-events-none">
+                                    <div class="w-16 h-8 md:w-24 md:h-12 bg-emerald-500/70 rounded-full border-2 border-emerald-300 shadow flex items-center justify-center text-sm">🍃</div>
+                                    <div class="w-16 h-8 md:w-24 md:h-12 bg-emerald-500/70 rounded-full border-2 border-emerald-300 shadow flex items-center justify-center text-xs">🍃</div>
+                                    <div class="w-16 h-8 md:w-24 md:h-12 bg-emerald-500/70 rounded-full border-2 border-emerald-300 shadow flex items-center justify-center text-xs">🍃</div>
+                                    <div class="w-16 h-8 md:w-24 md:h-12 bg-emerald-500/70 rounded-full border-2 border-emerald-300 shadow flex items-center justify-center text-xs">🍃</div>
+                                </div>
+                                ` : ''}
+
+                                <!-- Main Lily Pad Platform with Frog Standing Directly On Top -->
+                                <div class="relative z-10 flex flex-col items-center justify-center pointer-events-none mt-2">
+                                    <!-- Frog Character sitting on top of pad -->
+                                    <div id="frog-${p.id}" class="transition-all duration-300 z-20 -mb-3 md:-mb-4 ${p.animState === 'jumping' ? 'animate-[hop_0.4s_ease-in-out]' : p.animState === 'falling' ? 'animate-[fall-water_0.6s_ease-in-out]' : 'animate-float'}">
+                                        <img src="https://imgur.com/hacZ7WF.png" alt="Frog" class="w-16 h-16 md:w-24 md:h-24 object-contain filter drop-shadow-lg" onerror="this.onerror=null; this.src='https://placehold.co/100x100/22c55e/ffffff?text=🐸';">
+                                    </div>
+
+                                    <!-- Main Giant Lily Pad Platform beneath frog -->
+                                    <div class="w-28 h-10 md:w-40 md:h-14 bg-gradient-to-r from-emerald-400 via-green-500 to-emerald-600 rounded-full border-4 border-emerald-200 shadow-2xl flex items-center justify-center relative">
+                                        <div class="w-full h-full rounded-full border-2 border-emerald-300/60 opacity-70"></div>
+                                        <span class="absolute text-xs md:text-sm font-extrabold text-emerald-950 opacity-60">🪷 DAUN TERATAI 🪷</span>
+                                    </div>
+                                </div>
+
+                                <!-- Feedback Popup Text -->
+                                <div id="feedback-${p.id}" class="absolute inset-0 flex items-center justify-center z-30 pointer-events-none text-base font-extrabold drop-shadow-lg opacity-0 transition-opacity duration-300">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Options on Lily Pads (Berbaris / Grid) -->
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-2.5 w-full mt-2">
+                            ${p.options.map((opt, oIdx) => `
+                                <button onclick="handleAnswer(${p.id}, ${opt})" id="btn-opt-${p.id}-${oIdx}" class="lily-pad bg-gradient-to-br from-emerald-100 via-emerald-200 to-green-300 hover:from-emerald-200 hover:to-green-400 text-emerald-950 font-extrabold py-3.5 px-3 rounded-2xl shadow-xl border-3 border-emerald-500 text-lg md:text-2xl transition transform active:scale-95 flex items-center justify-center gap-2">
+                                    <span class="w-7 h-7 rounded-full bg-emerald-600 text-white text-xs flex items-center justify-center shadow-inner shrink-0">${oIdx + 1}</span>
+                                    <span>${opt}</span>
+                                </button>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+                container.innerHTML += playerHtml;
+            });
+        }
+
+        // --- ANSWER HANDLING & ANIMATIONS ---
+        function handleAnswer(playerIdx, selectedVal) {
+            const player = gameState.players[playerIdx];
+            if (!player.active || player.animState !== 'idle') return;
+
+            const correctVal = player.currentQuestion.answer;
+            const isCorrect = selectedVal === correctVal;
+
+            if (isCorrect) {
+                player.score += 10;
+                player.streak += 1.3;
+                if (player.streak >= 3) {
+                    player.score += 5; // bonus
+                    player.streak = 0;
+                }
+                player.correctCount++;
+                player.animState = 'jumping';
+                playSFX('correct');
+                playSFX('jump');
+
+                showFeedback(playerIdx, "HEBAT! ✨", "text-emerald-300 bg-emerald-950/80");
+
+                updatePlayerUI(playerIdx);
+
+                setTimeout(() => {
+                    player.animState = 'idle';
+                    generateNewQuestionForPlayer(playerIdx);
+                    updatePlayerUI(playerIdx);
+                }, 500);
+
+            } else {
+                player.lives -= 1;
+                player.streak = 0;
+                player.wrongCount++;
+                player.animState = 'falling';
+                playSFX('wrong');
+                playSFX('splash');
+
+                showFeedback(playerIdx, "UPS! 💦", "text-rose-300 bg-rose-950/80");
+
+                updatePlayerUI(playerIdx);
+
+                setTimeout(() => {
+                    if (player.lives <= 0) {
+                        player.active = false;
+                        checkGameEnd();
+                    } else {
+                        player.animState = 'idle';
+                        generateNewQuestionForPlayer(playerIdx);
+                        updatePlayerUI(playerIdx);
+                    }
+                }, 600);
+            }
+        }
+
+        function showFeedback(playerIdx, text, cssClass) {
+            const fb = document.getElementById(`feedback-${playerIdx}`);
+            if (!fb) return;
+            fb.textContent = text;
+            fb.className = `absolute inset-0 flex items-center justify-center z-30 pointer-events-none text-2xl font-extrabold drop-shadow-lg opacity-100 transition-opacity duration-300 ${cssClass} rounded-3xl`;
+            setTimeout(() => {
+                fb.classList.remove('opacity-100');
+                fb.classList.add('opacity-0');
+            }, 500);
+        }
+
+        function updatePlayerUI(playerIdx) {
+            const p = gameState.players[playerIdx];
+            const livesEl = document.getElementById(`p-lives-${p.id}`);
+            const scoreEl = document.getElementById(`p-score-${p.id}`);
+            const qTextEl = document.getElementById(`p-qtext-${p.id}`);
+            const frogEl = document.getElementById(`frog-${p.id}`);
+
+            if (livesEl) livesEl.textContent = p.lives;
+            if (scoreEl) scoreEl.textContent = p.score;
+            if (qTextEl) qTextEl.textContent = `${p.currentQuestion.text} = ?`;
+
+            // Update options buttons
+            const arena = document.getElementById(`player-arena-${p.id}`);
+            if (arena) {
+                const buttons = arena.querySelectorAll('.grid button');
+                buttons.forEach((btn, oIdx) => {
+                    const spanVal = btn.querySelector('span:nth-child(2)');
+                    if (spanVal && p.options[oIdx] !== undefined) {
+                        spanVal.textContent = p.options[oIdx];
+                    }
+                });
+            }
+
+            if (frogEl) {
+                frogEl.className = `transition-all duration-300 z-20 -mb-3 md:-mb-4 ${p.animState === 'jumping' ? 'animate-[hop_0.4s_ease-in-out]' : p.animState === 'falling' ? 'animate-[fall-water_0.6s_ease-in-out]' : 'animate-float'}`;
+            }
+        }
+
+        function checkGameEnd() {
+            let activePlayers = gameState.players.filter(p => p.active && p.lives > 0);
+            
+            // If solo mode or all players dead / finished
+            if (gameState.mode === 'solo') {
+                if (gameState.players[0].lives <= 0) {
+                    endGame();
+                }
+            } else {
+                if (activePlayers.length <= 1 || gameState.players.every(p => p.lives <= 0)) {
+                    // In multiplayer, end if only 1 or 0 players remain active
+                    setTimeout(() => endGame(), 800);
+                }
+            }
+        }
+
+        // --- END GAME & RESULTS ---
+        function endGame() {
+            if (bgmInterval) clearInterval(bgmInterval);
+            playSFX('win');
+
+            const resultContainer = document.getElementById('result-content');
+            resultContainer.innerHTML = '';
+
+            // Sort players by score descending
+            let sortedPlayers = [...gameState.players].sort((a, b) => b.score - a.score);
+
+            if (gameState.mode === 'solo') {
+                const p = sortedPlayers[0];
+                const accuracy = (p.correctCount + p.wrongCount) > 0 ? Math.round((p.correctCount / (p.correctCount + p.wrongCount)) * 100) : 0;
+                resultContainer.innerHTML = `
+                    <div class="bg-emerald-50 p-6 rounded-2xl border-2 border-emerald-200 space-y-3">
+                        <h3 class="text-2xl font-bold text-emerald-800">Kerja Bagus, Pahlawan Katak!</h3>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 pt-2">
+                            <div class="bg-white p-3 rounded-xl shadow-sm">
+                                <span class="block text-slate-500 text-xs font-bold">SKOR AKHIR</span>
+                                <span class="text-2xl font-extrabold text-emerald-600">${p.score}</span>
+                            </div>
+                            <div class="bg-white p-3 rounded-xl shadow-sm">
+                                <span class="block text-slate-500 text-xs font-bold">JAWABAN BENAR</span>
+                                <span class="text-2xl font-extrabold text-green-600">${p.correctCount}</span>
+                            </div>
+                            <div class="bg-white p-3 rounded-xl shadow-sm">
+                                <span class="block text-slate-500 text-xs font-bold">JAWABAN SALAH</span>
+                                <span class="text-2xl font-extrabold text-rose-600">${p.wrongCount}</span>
+                            </div>
+                            <div class="bg-white p-3 rounded-xl shadow-sm">
+                                <span class="block text-slate-500 text-xs font-bold">AKURASI</span>
+                                <span class="text-2xl font-extrabold text-cyan-600">${accuracy}%</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                // Multiplayer Leaderboard
+                let html = `<div class="space-y-3"><h3 class="text-2xl font-bold text-slate-800">🏆 Papan Peringkat</h3><div class="space-y-2">`;
+                sortedPlayers.forEach((p, rank) => {
+                    const medals = ['🥇', '🥈', '🥉', '🏅'];
+                    html += `
+                        <div class="flex items-center justify-between bg-slate-50 p-4 rounded-2xl border-2 border-slate-200">
+                            <div class="flex items-center gap-3">
+                                <span class="text-2xl">${medals[rank]}</span>
+                                <span class="font-bold text-slate-700 text-lg">${p.name}</span>
+                            </div>
+                            <div class="flex items-center gap-6">
+                                <span class="text-sm text-slate-500 font-semibold">Benar: ${p.correctCount}</span>
+                                <span class="text-xl font-extrabold text-emerald-600">${p.score} Poin</span>
+                            </div>
+                        </div>
+                    `;
+                });
+                html += `</div></div>`;
+                resultContainer.innerHTML = html;
+            }
+
+            showScreen('screen-result');
+        }
+
+        function restartGame() {
+            initGameSession();
+        }
+
+        function exitToMainMenu() {
+            if (bgmInterval) clearInterval(bgmInterval);
+            showScreen('screen-menu');
+        }
+
+        function confirmExitGame() {
+            if (confirm("Yakin ingin keluar ke menu utama? Progres permainan akan hilang.")) {
+                exitToMainMenu();
+            }
+        }
+    </script>
+</body>
+</html>
